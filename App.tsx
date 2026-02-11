@@ -46,7 +46,6 @@ export default function App() {
   const [provider, setProvider] = useState(() => localStorage.getItem('aerogen_ai_provider') || 'gemini');
   const [selectedModelId, setSelectedModelId] = useState(() => localStorage.getItem('aerogen_ai_model') || 'gemini-3-flash-preview');
   const [openAiKey, setOpenAiKey] = useState(() => localStorage.getItem('aerogen_openai_key') || '');
-  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('aerogen_gemini_key') || '');
   const [anthropicKey, setAnthropicKey] = useState(() => localStorage.getItem('aerogen_anthropic_key') || '');
   
   const [systemPrompt, setSystemPrompt] = useState(() => localStorage.getItem('gb_system_prompt') || DEFAULT_SYSTEM_PROMPT);
@@ -68,7 +67,6 @@ export default function App() {
     if (key === 'aerogen_ai_provider') setProvider(value);
     if (key === 'aerogen_ai_model') setSelectedModelId(value);
     if (key === 'aerogen_openai_key') setOpenAiKey(value);
-    if (key === 'aerogen_gemini_key') setGeminiKey(value);
     if (key === 'aerogen_anthropic_key') setAnthropicKey(value);
     if (key === 'gb_system_prompt') setSystemPrompt(value);
     if (key === 'gb_user_prompt_template') setUserPrompt(value);
@@ -147,9 +145,9 @@ export default function App() {
   };
 
   const runBulkGeneration = async () => {
-    // @ts-ignore
-    const envApiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : '';
-    if (provider === 'gemini' && !geminiKey && !envApiKey) return alert("Falta API Key.");
+    // Check keys for other providers if necessary, but for Gemini we rely on env var.
+    if (provider === 'openai' && !openAiKey) return alert("Falta OpenAI API Key.");
+    if (provider === 'anthropic' && !anthropicKey) return alert("Falta Anthropic API Key.");
     
     setStep(GenerationStep.GENERATING);
     let completed = 0;
@@ -258,7 +256,6 @@ export default function App() {
         <div className="space-y-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Credenciales</p>
           <div className="space-y-4">
-            <CredentialInput label="Gemini Key" value={geminiKey} onChange={v => updateSetting('aerogen_gemini_key', v)} />
             <CredentialInput label="OpenAI Key" value={openAiKey} onChange={v => updateSetting('aerogen_openai_key', v)} />
             <CredentialInput label="Anthropic Key" value={anthropicKey} onChange={v => updateSetting('aerogen_anthropic_key', v)} />
           </div>

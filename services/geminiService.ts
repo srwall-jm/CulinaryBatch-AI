@@ -106,7 +106,6 @@ export const generateRecipeContent = async (recipe: RecipeInput, masterList: Mas
   const model = localStorage.getItem('aerogen_ai_model') || (provider === 'openai' ? 'gpt-4o-mini' : 'gemini-3-flash-preview');
   
   const openAiKey = localStorage.getItem('aerogen_openai_key');
-  const geminiKeyManual = localStorage.getItem('aerogen_gemini_key');
   const anthropicKey = localStorage.getItem('aerogen_anthropic_key');
 
   const systemPrompt = localStorage.getItem('gb_system_prompt') || DEFAULT_SYSTEM_PROMPT;
@@ -136,15 +135,8 @@ export const generateRecipeContent = async (recipe: RecipeInput, masterList: Mas
   };
 
   try {
-    // Access process.env safely using optional chaining/fallback logic
-    // @ts-ignore
-    const envApiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : '';
-
     if (provider === 'gemini') {
-      const apiKey = geminiKeyManual || envApiKey;
-      if (!apiKey) throw new Error("Falta Gemini API Key.");
-
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: model,
         contents: userPrompt,
