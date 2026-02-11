@@ -136,8 +136,10 @@ export const generateRecipeContent = async (recipe: RecipeInput, masterList: Mas
 
   try {
     if (provider === 'gemini') {
-      const apiKey = process.env.API_KEY;
-      if (!apiKey) throw new Error("Falta la API Key de Gemini. Verifica tu configuración de entorno (process.env.API_KEY).");
+      // Prioriza la clave guardada en el navegador (input del usuario), si no, usa la del entorno
+      const apiKey = localStorage.getItem('aerogen_gemini_key') || process.env.API_KEY;
+      
+      if (!apiKey) throw new Error("Falta la API Key de Gemini. Introdúcela en el menú lateral o configura process.env.API_KEY.");
 
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Upload, 
@@ -27,7 +26,8 @@ import {
   Link,
   Search,
   Plus,
-  Menu
+  Menu,
+  Cpu
 } from 'lucide-react';
 import { RecipeInput, GeneratedRecipe, GenerationStep, MasterRecipe } from './types';
 import { parseExcelFile, parseMasterExcel, exportRecipesExcel, exportStepsExcel, exportFaqsExcel } from './utils/excelHandler';
@@ -35,9 +35,10 @@ import { generateRecipeContent, DEFAULT_SYSTEM_PROMPT, DEFAULT_USER_PROMPT_TEMPL
 
 const AVAILABLE_MODELS = [
   { id: 'gemini-3-flash-preview', provider: 'gemini', name: 'Gemini 3.0 Flash' },
-  { id: 'gpt-4o-mini', provider: 'openai', name: 'GPT-4o Mini' },
-  { id: 'claude-3-5-sonnet-latest', provider: 'anthropic', name: 'Sonnet 4' },
   { id: 'gemini-3-pro-preview', provider: 'gemini', name: 'Gemini 3.0 Pro' },
+  { id: 'gpt-4o-mini', provider: 'openai', name: 'GPT-4o Mini' },
+  { id: 'gpt-4o', provider: 'openai', name: 'GPT-4o' },
+  { id: 'claude-3-5-sonnet-latest', provider: 'anthropic', name: 'Claude 3.5 Sonnet' },
 ];
 
 const GB_LOGO_URL = "https://worldbranddesign.com/wp-content/uploads/2023/11/GALLINA_BLANCA_LBB_07.jpg";
@@ -45,6 +46,9 @@ const GB_LOGO_URL = "https://worldbranddesign.com/wp-content/uploads/2023/11/GAL
 export default function App() {
   const [provider, setProvider] = useState(() => localStorage.getItem('aerogen_ai_provider') || 'gemini');
   const [selectedModelId, setSelectedModelId] = useState(() => localStorage.getItem('aerogen_ai_model') || 'gemini-3-flash-preview');
+  
+  // Credenciales
+  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('aerogen_gemini_key') || '');
   const [openAiKey, setOpenAiKey] = useState(() => localStorage.getItem('aerogen_openai_key') || '');
   const [anthropicKey, setAnthropicKey] = useState(() => localStorage.getItem('aerogen_anthropic_key') || '');
   
@@ -66,10 +70,23 @@ export default function App() {
     localStorage.setItem(key, value);
     if (key === 'aerogen_ai_provider') setProvider(value);
     if (key === 'aerogen_ai_model') setSelectedModelId(value);
+    
+    // Updates de keys
+    if (key === 'aerogen_gemini_key') setGeminiKey(value);
     if (key === 'aerogen_openai_key') setOpenAiKey(value);
     if (key === 'aerogen_anthropic_key') setAnthropicKey(value);
+    
     if (key === 'gb_system_prompt') setSystemPrompt(value);
     if (key === 'gb_user_prompt_template') setUserPrompt(value);
+  };
+
+  const handleProviderChange = (newProvider: string) => {
+    updateSetting('aerogen_ai_provider', newProvider);
+    // Seleccionar automáticamente el primer modelo disponible para el nuevo proveedor
+    const defaultModel = AVAILABLE_MODELS.find(m => m.provider === newProvider);
+    if (defaultModel) {
+      updateSetting('aerogen_ai_model', defaultModel.id);
+    }
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,7 +162,9 @@ export default function App() {
   };
 
   const runBulkGeneration = async () => {
-    // Check keys for other providers if necessary, but for Gemini we rely on env var.
+    // Validaciones de API Keys
+    const envGemini = process.env.API_KEY; // Fallback al entorno
+    if (provider === 'gemini' && !geminiKey && !envGemini) return alert("Falta Gemini API Key. Introdúcela en el menú lateral.");
     if (provider === 'openai' && !openAiKey) return alert("Falta OpenAI API Key.");
     if (provider === 'anthropic' && !anthropicKey) return alert("Falta Anthropic API Key.");
     
@@ -245,19 +264,39 @@ export default function App() {
         </div>
 
         <div className="space-y-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Proveedor AI</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Configuración AI</p>
+          
+          {/* Selector de Proveedor */}
           <div className="grid grid-cols-3 gap-2">
-            <button onClick={() => updateSetting('aerogen_ai_provider', 'gemini')} className={`py-2 rounded-lg text-[10px] font-bold ${provider === 'gemini' ? 'bg-[#005999] text-white' : 'bg-white/5 text-slate-300'}`}>Gemini</button>
-            <button onClick={() => updateSetting('aerogen_ai_provider', 'openai')} className={`py-2 rounded-lg text-[10px] font-bold ${provider === 'openai' ? 'bg-[#005999] text-white' : 'bg-white/5 text-slate-300'}`}>OpenAI</button>
-            <button onClick={() => updateSetting('aerogen_ai_provider', 'anthropic')} className={`py-2 rounded-lg text-[10px] font-bold ${provider === 'anthropic' ? 'bg-[#005999] text-white' : 'bg-white/5 text-slate-300'}`}>Claude</button>
+            <button onClick={() => handleProviderChange('gemini')} className={`py-2 rounded-lg text-[10px] font-bold transition-colors ${provider === 'gemini' ? 'bg-[#005999] text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>Gemini</button>
+            <button onClick={() => handleProviderChange('openai')} className={`py-2 rounded-lg text-[10px] font-bold transition-colors ${provider === 'openai' ? 'bg-[#005999] text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>OpenAI</button>
+            <button onClick={() => handleProviderChange('anthropic')} className={`py-2 rounded-lg text-[10px] font-bold transition-colors ${provider === 'anthropic' ? 'bg-[#005999] text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>Claude</button>
+          </div>
+
+          {/* Selector de Modelo Específico */}
+          <div className="space-y-2 mt-2">
+            <p className="text-[9px] font-bold text-slate-500 uppercase flex items-center gap-1"><Cpu size={10}/> Modelo Seleccionado</p>
+            <div className="space-y-1">
+              {AVAILABLE_MODELS.filter(m => m.provider === provider).map(model => (
+                <button 
+                  key={model.id}
+                  onClick={() => updateSetting('aerogen_ai_model', model.id)}
+                  className={`w-full py-2 px-3 rounded-lg text-[10px] font-bold text-left flex justify-between items-center transition-all ${selectedModelId === model.id ? 'bg-[#FFD200] text-[#005999] shadow-sm' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200'}`}
+                >
+                  <span>{model.name}</span>
+                  {selectedModelId === model.id && <CheckCircle size={12} className="text-[#005999]" />}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="space-y-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Credenciales</p>
           <div className="space-y-4">
-            <CredentialInput label="OpenAI Key" value={openAiKey} onChange={v => updateSetting('aerogen_openai_key', v)} />
-            <CredentialInput label="Anthropic Key" value={anthropicKey} onChange={v => updateSetting('aerogen_anthropic_key', v)} />
+            <CredentialInput label="Gemini API Key" value={geminiKey} onChange={(v: string) => updateSetting('aerogen_gemini_key', v)} />
+            <CredentialInput label="OpenAI Key" value={openAiKey} onChange={(v: string) => updateSetting('aerogen_openai_key', v)} />
+            <CredentialInput label="Anthropic Key" value={anthropicKey} onChange={(v: string) => updateSetting('aerogen_anthropic_key', v)} />
           </div>
         </div>
 
@@ -605,4 +644,3 @@ const CredentialInput = ({ label, value, onChange }: any) => (
     <input type="password" value={value} onChange={e => onChange(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 lg:py-3 text-xs text-white outline-none focus:ring-1 focus:ring-[#FFD200] transition-all" placeholder="••••••••" />
   </div>
 );
-
