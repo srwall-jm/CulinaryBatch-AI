@@ -136,7 +136,10 @@ export const generateRecipeContent = async (recipe: RecipeInput, masterList: Mas
 
   try {
     if (provider === 'gemini') {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = process.env.API_KEY;
+      if (!apiKey) throw new Error("Falta la API Key de Gemini. Verifica tu configuración de entorno (process.env.API_KEY).");
+
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: model,
         contents: userPrompt,
