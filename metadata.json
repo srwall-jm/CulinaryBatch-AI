@@ -1,0 +1,5 @@
+{
+  "name": "Recipe Bulk Content Generator",
+  "description": "A professional tool to generate high-quality SEO content for recipes in bulk using the Gemini API. Upload an Excel file, generate content, and export the results.",
+  "requestFramePermissions": []
+}
