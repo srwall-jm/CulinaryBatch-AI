@@ -136,8 +136,12 @@ export const generateRecipeContent = async (recipe: RecipeInput, masterList: Mas
   };
 
   try {
+    // Access process.env safely using optional chaining/fallback logic
+    // @ts-ignore
+    const envApiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : '';
+
     if (provider === 'gemini') {
-      const apiKey = geminiKeyManual || process.env.API_KEY;
+      const apiKey = geminiKeyManual || envApiKey;
       if (!apiKey) throw new Error("Falta Gemini API Key.");
 
       const ai = new GoogleGenAI({ apiKey });

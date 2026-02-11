@@ -147,7 +147,10 @@ export default function App() {
   };
 
   const runBulkGeneration = async () => {
-    if (provider === 'gemini' && !geminiKey && !process.env.API_KEY) return alert("Falta API Key.");
+    // @ts-ignore
+    const envApiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : '';
+    if (provider === 'gemini' && !geminiKey && !envApiKey) return alert("Falta API Key.");
+    
     setStep(GenerationStep.GENERATING);
     let completed = 0;
     for (let i = 0; i < recipes.length; i++) {

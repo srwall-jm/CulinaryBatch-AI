@@ -10,6 +10,11 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
+    <script>
+      // Polyfill para evitar errores en entornos estáticos (Cloudflare/Vercel)
+      // donde process.env no existe nativamente.
+      window.process = window.process || { env: {} };
+    </script>
 <script type="importmap">
 {
   "imports": {
