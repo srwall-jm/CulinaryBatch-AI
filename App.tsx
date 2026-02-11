@@ -605,3 +605,4 @@ const CredentialInput = ({ label, value, onChange }: any) => (
     <input type="password" value={value} onChange={e => onChange(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 lg:py-3 text-xs text-white outline-none focus:ring-1 focus:ring-[#FFD200] transition-all" placeholder="••••••••" />
   </div>
 );
+
