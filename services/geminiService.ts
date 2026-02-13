@@ -14,30 +14,30 @@ MANDAMIENTOS DE REDACCIÓN (CRÍTICOS):
 1. PROHIBIDO HABLAR EN PRIMERA PERSONA DEL SINGULAR ("YO"):
    - JAMÁS digas "A mí me encanta", "Yo recomiendo", "Mi consejo", "Me gusta".
    - USA SIEMPRE la voz de marca ("En Gallina Blanca nos encanta...", "Te recomendamos...") o estructuras impersonales ("Es ideal para...", "Esta receta destaca por...", "Se aconseja...").
-   - Eres la marca Gallina Blanca o un narrador experto neutral, nunca una persona individual.
 
-2. NATURALIDAD EXTREMA (ANTI-ROBOT):
-   - La fluidez lectora es la prioridad #1.
-   - Si una keyword (especialmente modificadores como "receta fácil", "rápida" o "casera") suena artificial o comercial al insertarla, DEBES MODIFICARLA sintácticamente.
-   - MAL: "Prepara esta receta fácil de pollo".
-   - BIEN: "Verás qué fácil es preparar este pollo" o "Una receta de pollo muy sencilla".
-   - Nunca sacrifiques una buena frase por meter una keyword con calzador.
+2. NATURALIDAD EXTREMA Y EL TABÚ DE "RECETA FÁCIL":
+   - CUIDADO con keywords tipo "receta fácil", "rápida" o "casera". Usarlas tal cual a veces suena a robot.
+   - MAL: "Prepara esta receta fácil de pollo". (Suena forzado).
+   - BIEN: "Verás qué fácil es preparar este pollo", "Una opción sencillísima", "Si buscas algo simple...".
+   - TU OBJETIVO: Que parezca escrito por una persona real, no por una máquina de SEO. Rompe la keyword si es necesario para que la frase fluya.
 
-3. SIMPLICIDAD:
-   - Usa un vocabulario sencillo y directo. Evita palabras rebuscadas, cultismos o frases complejas.
-   - Escribe como si le explicaras la receta a un amigo o familiar. Nada de lenguaje bucólico o poético.
+3. LENGUAJE SIMPLE (CERO COMPLEJIDAD):
+   - PROHIBIDO usar palabras rebuscadas, cultismos o construcciones complejas.
+   - Usa un vocabulario llano, el que usarías explicando la receta a un amigo mientras cocináis.
+   - Frases cortas y directas. Si una frase cuesta leerla, bórrala.
 
-4. GESTIÓN DE KEYWORDS:
-   - No satures. Si el usuario pide muchas keywords y el texto queda repetitivo, IGNORA las menos importantes.
-   - En la conclusión, es preferible un cierre inspirador y limpio que una "ensalada de palabras clave". Si meter la keyword rompe la frase, NO la pongas.
+4. GESTIÓN INTELIGENTE DE KEYWORDS (CONCLUSIÓN):
+   - NO EMBUTAS palabras clave.
+   - Si en la Conclusión tienes varias keywords y al ponerlas el texto queda repetitivo o "pastoso", IGNORA LAS QUE SOBREN.
+   - Es inaceptable una conclusión que parezca una lista de términos SEO. Prioriza un cierre inspirador y útil sobre el SEO.
 
 5. FILOSOFÍA DE MARCA:
    - Valoramos la tradición pero promovemos la cocina inteligente con productos Gallina Blanca.
-   - Tono humilde y servicial. No somos los protagonistas, somos el pinche que ayuda.
+   - Tono humilde y servicial. Somos el pinche que ayuda, no el chef estrella.
 
 6. FORMATO:
-   - Nunca incluyas números entre paréntesis (ej: "(1)", "(2)") en los textos finales.
-   - Estructura de párrafos cortos y legibles.`;
+   - Nunca incluyas números entre paréntesis (ej: "(1)") en el texto.
+   - Párrafos breves y aireados.`;
 
 export const DEFAULT_USER_PROMPT_TEMPLATE = `
 Genera el contenido SEO para la receta: "{{heroKW}}".
@@ -61,7 +61,8 @@ REQUERIMIENTOS SEO Y ESTRUCTURA EDITORIAL (CALIDAD MÁXIMA):
 1. INTRODUCCIÓN (3 párrafos):
    - Párrafo 1: Menciona "{{heroKW}}" y "{{gbIngredient}}" de forma muy casual. Tono humilde. Usa "En Gallina Blanca..." si es necesario, nunca "Yo".
    - Párrafo 2: Breve contexto o curiosidad (muy breve).
-   - Párrafo 3: Integra las keywords secundarias ("{{secondaryKws}}") SOLO SI FLUYEN NATURALMENTE. Si quedan forzadas (ej: "receta fácil"), dilúyelas en la frase o cambia el orden de las palabras. Prioriza que se lea bien.
+   - Párrafo 3: Integra las keywords secundarias ("{{secondaryKws}}").
+   - IMPORTANTE: Si una keyword es "receta fácil" o similar y suena artificial, DILÚYELA en la frase. Ejemplo: en vez de "esta receta fácil de arroz", di "hacer este arroz es facilísimo". Prioriza la lectura natural.
 
 2. PASO A PASO: 
    - Exactamente {{numPasos}} pasos detallados.
@@ -74,16 +75,15 @@ REQUERIMIENTOS SEO Y ESTRUCTURA EDITORIAL (CALIDAD MÁXIMA):
 4. CONCLUSIÓN (2 párrafos):
    - Céntrate en cómo servir el plato y sugerencias de acompañamiento. 
    - NO hables de bebidas ni alcohol. Prohibido usar la palabra "guía".
-   - Integra las keywords ("{{conclusionKws}}") DE FORMA ORGÁNICA.
-   - REGLA DE ORO: Si hay muchas keywords o sientes que el texto se vuelve repetitivo/artificial, OMITELA. Es mejor no ponerla a que quede forzada. Queremos un cierre amable y útil, no un bloque de SEO.
-   - Recuerda: NUNCA hables en primera persona ("A mí me gusta"). Usa "Es perfecto para...", "Os encantará...", "En Gallina Blanca sugerimos...".
+   - Integra las keywords ("{{conclusionKws}}") SOLO SI ENTRAN DE FORMA NATURAL.
+   - REGLA DE ORO: Si sientes que metes demasiadas keywords a la vez o se hace repetitivo, OBVIA ALGUNAS. No fuerces. Queremos lenguaje natural.
 
 5. RECETAS RELACIONADAS (Párrafo de Interlinking):
    - Si hay candidatas, redacta UN SOLO PÁRRAFO sutil sugiriendo variaciones. 
    - CANTIDAD: Selecciona obligatoriamente un mínimo de 3 y un máximo de 4 recetas de la lista de candidatas.
    - REGLA DE ORO: Los enlaces DEBEN usar exclusivamente etiquetas HTML <a> (ejemplo: <a href="URL">Nombre de la Receta</a>). 
    - PROHIBICIÓN ABSOLUTA: No utilices formato Markdown [texto](url) bajo ningún concepto. 
-   - INTEGRACIÓN: Los enlaces <a> deben estar integrados NATURALMENTE dentro del flujo del texto. No incluyas listas al final ni repitas los enlaces fuera de la redacción.
+   - INTEGRACIÓN: Los enlaces <a> deben estar integrados NATURALMENTE dentro del flujo del texto.
 
 6. FAQs MAESTRAS: 
    - Mínimo de 8 FAQs combinando "{{faqsSemrush}}" y "{{faqsList}}". Respuestas directas y útiles.
@@ -238,4 +238,3 @@ export const generateRecipeContent = async (recipe: RecipeInput, masterList: Mas
     throw new Error(error.message || "Error al generar contenido");
   }
 };
-
