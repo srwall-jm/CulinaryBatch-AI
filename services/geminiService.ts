@@ -24,25 +24,30 @@ MANDAMIENTOS DE REDACCIÓN (CRÍTICOS):
    - BIEN: "Si buscas una receta fácil de paella".
    - REGLA DE ORO: Tienes permiso total para añadir preposiciones ("de", "para", "con"), artículos ("el", "la") y cambiar el orden de las palabras para que la frase suene a ESPAÑOL NATIVO.
 
-3. NATURALIDAD EXTREMA:
+3. USO OBLIGATORIO DE SINÓNIMOS PARA "RECETA FÁCIL":
+   - Cuando aparezca la keyword "receta fácil", NO la repitas mecánicamente.
+   - ALTERNA CON SINÓNIMOS: "sencilla", "simple", "sin complicaciones", "rápida", "apta para principiantes", "elaboración asequible", "sin líos".
+   - El objetivo es riqueza léxica. Que no parezca que tienes un vocabulario limitado.
+
+4. NATURALIDAD EXTREMA:
    - Si una keyword suena forzada, DILÚYELA.
    - Tu objetivo es que el texto parezca escrito por un humano, no por una máquina SEO.
    - La fluidez lectora está por encima de la coincidencia exacta de la keyword.
 
-4. LENGUAJE SIMPLE (CERO COMPLEJIDAD):
+5. LENGUAJE SIMPLE (CERO COMPLEJIDAD):
    - PROHIBIDO usar palabras rebuscadas.
    - Usa un vocabulario llano y directo. Frases cortas.
 
-5. GESTIÓN INTELIGENTE DE KEYWORDS (CONCLUSIÓN):
+6. GESTIÓN INTELIGENTE DE KEYWORDS (CONCLUSIÓN):
    - NO EMBUTAS palabras clave.
    - Si en la Conclusión tienes varias keywords y al ponerlas el texto queda repetitivo o "pastoso", IGNORA LAS QUE SOBREN.
    - Prioriza un cierre inspirador y útil sobre el SEO.
 
-6. FILOSOFÍA DE MARCA:
+7. FILOSOFÍA DE MARCA:
    - Valoramos la tradición pero promovemos la cocina inteligente con productos Gallina Blanca.
    - Tono humilde y servicial.
 
-7. FORMATO:
+8. FORMATO:
    - Nunca incluyas números entre paréntesis (ej: "(1)") en el texto.
    - Párrafos breves.`;
 
@@ -69,7 +74,8 @@ REQUERIMIENTOS SEO Y ESTRUCTURA EDITORIAL (CALIDAD MÁXIMA):
    - Párrafo 1: Menciona "{{heroKW}}" y "{{gbIngredient}}" de forma casual. Tono humilde ("En Gallina Blanca...").
    - Párrafo 2: Breve contexto o curiosidad.
    - Párrafo 3: Integra las keywords secundarias ("{{secondaryKws}}").
-   - CRÍTICO: ADAPTA LA GRAMÁTICA. Si la keyword es "pollo receta", escribe "receta de pollo". Añade preposiciones y artículos para que suene nativo.
+   - CRÍTICO: ADAPTA LA GRAMÁTICA. Si la keyword es "pollo receta", escribe "receta de pollo". Añade preposiciones.
+   - SI APARECE "RECETA FÁCIL": Usa sinónimos como "sencilla", "simple", etc.
 
 2. PASO A PASO: 
    - Exactamente {{numPasos}} pasos detallados.
