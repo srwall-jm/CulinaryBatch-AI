@@ -238,3 +238,4 @@ export const generateRecipeContent = async (recipe: RecipeInput, masterList: Mas
     throw new Error(error.message || "Error al generar contenido");
   }
 };
+
