@@ -29,9 +29,9 @@ import {
   Menu,
   Cpu
 } from 'lucide-react';
-import { RecipeInput, GeneratedRecipe, GenerationStep, MasterRecipe } from './types';
-import { parseExcelFile, parseMasterExcel, exportRecipesExcel, exportStepsExcel, exportFaqsExcel } from './utils/excelHandler';
-import { generateRecipeContent, DEFAULT_SYSTEM_PROMPT, DEFAULT_USER_PROMPT_TEMPLATE } from './services/geminiService';
+import { RecipeInput, GeneratedRecipe, GenerationStep, MasterRecipe, GeneratedCategory, MasterCategory } from './types';
+import { parseExcelFile, parseMasterExcel, exportRecipesExcel, exportStepsExcel, exportFaqsExcel, parseCategoryExcel, parseMasterCategoriesExcel, exportCategoriesExcel } from './utils/excelHandler';
+import { generateRecipeContent, generateCategoryContent, DEFAULT_SYSTEM_PROMPT, DEFAULT_USER_PROMPT_TEMPLATE, DEFAULT_CATEGORY_USER_PROMPT_TEMPLATE } from './services/geminiService';
 
 const AVAILABLE_MODELS = [
   { id: 'gemini-3-flash-preview', provider: 'gemini', name: 'Gemini 3.0 Flash' },
@@ -54,17 +54,24 @@ export default function App() {
   
   const [systemPrompt, setSystemPrompt] = useState(() => localStorage.getItem('gb_system_prompt') || DEFAULT_SYSTEM_PROMPT);
   const [userPrompt, setUserPrompt] = useState(() => localStorage.getItem('gb_user_prompt_template') || DEFAULT_USER_PROMPT_TEMPLATE);
+  const [categoryPrompt, setCategoryPrompt] = useState(() => localStorage.getItem('gb_category_prompt_template') || DEFAULT_CATEGORY_USER_PROMPT_TEMPLATE);
   const [showPromptsModal, setShowPromptsModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'recipes' | 'categories'>('recipes');
 
   const [recipes, setRecipes] = useState<GeneratedRecipe[]>([]);
+  const [categories, setCategories] = useState<GeneratedCategory[]>([]);
   const [masterRecipes, setMasterRecipes] = useState<MasterRecipe[]>([]);
+  const [masterCategories, setMasterCategories] = useState<MasterCategory[]>([]);
+  
   const [step, setStep] = useState<GenerationStep>(GenerationStep.IDLE);
   const [progress, setProgress] = useState(0);
   const [previewRecipe, setPreviewRecipe] = useState<GeneratedRecipe | null>(null);
+  const [previewCategory, setPreviewCategory] = useState<GeneratedCategory | null>(null);
 
   const jsonInputRef = useRef<HTMLInputElement>(null);
   const masterInputRef = useRef<HTMLInputElement>(null);
+  const masterCategoriesInputRef = useRef<HTMLInputElement>(null);
 
   const updateSetting = (key: string, value: string) => {
     localStorage.setItem(key, value);
@@ -78,6 +85,7 @@ export default function App() {
     
     if (key === 'gb_system_prompt') setSystemPrompt(value);
     if (key === 'gb_user_prompt_template') setUserPrompt(value);
+    if (key === 'gb_category_prompt_template') setCategoryPrompt(value);
   };
 
   const handleProviderChange = (newProvider: string) => {
@@ -120,11 +128,54 @@ export default function App() {
     event.target.value = '';
   };
 
+  const handleCategoryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setStep(GenerationStep.PARSING);
+    try {
+      const data = await parseCategoryExcel(file);
+      if (data.length === 0) {
+        alert("No se encontraron categorías válidas. Asegúrate de que el Excel tenga datos en la primera columna.");
+        setStep(GenerationStep.IDLE);
+        return;
+      }
+      setCategories(data.map(input => ({
+        input, content: '', status: 'pending'
+      })));
+      setStep(GenerationStep.IDLE);
+    } catch (e: any) { 
+      console.error(e);
+      alert(`Error cargando Excel de Categorías: ${e.message}`); 
+      setStep(GenerationStep.IDLE); 
+    }
+    event.target.value = '';
+  };
+
+  const handleMasterCategoriesUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = await parseMasterCategoriesExcel(file);
+      if (data.length === 0) {
+        alert("No se encontraron categorías master válidas. Asegúrate de que el Excel tenga URLs y Nombres.");
+        return;
+      }
+      setMasterCategories(data);
+      alert(`Master Categorías cargado: ${data.length} categorías para interlinking.`);
+    } catch (e: any) {
+      console.error(e);
+      alert(`Error cargando Master Categorías: ${e.message}`);
+    }
+    event.target.value = '';
+  };
+
   const handleSaveSession = () => {
-    if (recipes.length === 0) return alert("No hay datos para guardar.");
+    if (recipes.length === 0 && categories.length === 0) return alert("No hay datos para guardar.");
     const sessionData = {
       recipes,
-      masterRecipes
+      categories,
+      masterRecipes,
+      masterCategories
     };
     const dataStr = JSON.stringify(sessionData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -146,7 +197,9 @@ export default function App() {
         const json = JSON.parse(e.target?.result as string);
         if (json.recipes && Array.isArray(json.recipes)) {
           setRecipes(json.recipes);
+          if (json.categories) setCategories(json.categories);
           if (json.masterRecipes) setMasterRecipes(json.masterRecipes);
+          if (json.masterCategories) setMasterCategories(json.masterCategories);
           alert("Sesión cargada con éxito.");
         } else if (Array.isArray(json)) {
           setRecipes(json);
@@ -203,7 +256,39 @@ export default function App() {
     setStep(GenerationStep.COMPLETED);
   };
 
+  const runBulkCategoryGeneration = async () => {
+    const envGemini = process.env.API_KEY;
+    if (provider === 'gemini' && !geminiKey && !envGemini) return alert("Falta Gemini API Key.");
+    if (provider === 'openai' && !openAiKey) return alert("Falta OpenAI API Key.");
+    if (provider === 'anthropic' && !anthropicKey) return alert("Falta Anthropic API Key.");
+    
+    setStep(GenerationStep.GENERATING);
+    let completed = 0;
+    for (let i = 0; i < categories.length; i++) {
+      if (categories[i].status === 'completed') { completed++; continue; }
+      setCategories(prev => { const n = [...prev]; n[i].status = 'processing'; return n; });
+      try {
+        const result = await generateCategoryContent(categories[i].input, masterRecipes, masterCategories);
+        setCategories(prev => {
+          const n = [...prev];
+          n[i] = { 
+            ...n[i], 
+            content: result.content,
+            status: 'completed' 
+          };
+          return n;
+        });
+      } catch (e: any) {
+        setCategories(prev => { const n = [...prev]; n[i].status = 'error'; n[i].error = e.message; return n; });
+      }
+      completed++;
+      setProgress(Math.round((completed / categories.length) * 100));
+    }
+    setStep(GenerationStep.COMPLETED);
+  };
+
   const totalCompleted = recipes.filter(r => r.status === 'completed').length;
+  const totalCategoriesCompleted = categories.filter(c => c.status === 'completed').length;
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full overflow-y-auto">
@@ -215,6 +300,25 @@ export default function App() {
       </div>
       
       <nav className="flex-1 p-6 space-y-8">
+        {/* Selector de Modo */}
+        <div className="space-y-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Modo de Trabajo</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button 
+              onClick={() => setViewMode('recipes')}
+              className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all border ${viewMode === 'recipes' ? 'bg-[#FFD200] text-[#005999] border-[#FFD200]' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10'}`}
+            >
+              <ChefHat size={20} /> <span className="text-[10px] font-black uppercase">Recetas</span>
+            </button>
+            <button 
+              onClick={() => setViewMode('categories')}
+              className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all border ${viewMode === 'categories' ? 'bg-[#FFD200] text-[#005999] border-[#FFD200]' : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10'}`}
+            >
+              <LayoutDashboard size={20} /> <span className="text-[10px] font-black uppercase">Categorías</span>
+            </button>
+          </div>
+        </div>
+
         {/* Gestión de Sesión */}
         <div className="space-y-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Gestión de Sesión</p>
@@ -240,26 +344,32 @@ export default function App() {
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Interlinking Status</p>
           <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold">Base de Datos:</span>
+              <span className="text-[10px] font-bold">Master Recetas:</span>
               <span className={`text-[10px] font-black uppercase ${masterRecipes.length > 0 ? 'text-green-400' : 'text-slate-500'}`}>
-                {masterRecipes.length > 0 ? `${masterRecipes.length} recetas` : 'No cargada'}
+                {masterRecipes.length > 0 ? `${masterRecipes.length}` : '0'}
               </span>
             </div>
             <button 
               onClick={() => masterInputRef.current?.click()}
               className="w-full py-2 bg-[#005999] text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-[#004a80] transition-all flex items-center justify-center gap-2"
             >
-              <Plus size={12}/> {masterRecipes.length > 0 ? 'Actualizar Master' : 'Cargar Master'}
+              <Plus size={12}/> {masterRecipes.length > 0 ? 'Actualizar Recetas' : 'Cargar Recetas'}
               <input type="file" ref={masterInputRef} className="hidden" accept=".xlsx, .xls" onChange={handleMasterUpload} />
             </button>
-            {masterRecipes.length > 0 && (
-               <button 
-               onClick={() => setMasterRecipes([])}
-               className="w-full py-2 border border-red-500/30 text-red-500 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-red-500/10 transition-all flex items-center justify-center gap-2"
-             >
-               <Trash2 size={12}/> Limpiar Master
-             </button>
-            )}
+
+            <div className="flex items-center justify-between pt-2 border-t border-white/10">
+              <span className="text-[10px] font-bold">Master Categorías:</span>
+              <span className={`text-[10px] font-black uppercase ${masterCategories.length > 0 ? 'text-green-400' : 'text-slate-500'}`}>
+                {masterCategories.length > 0 ? `${masterCategories.length}` : '0'}
+              </span>
+            </div>
+            <button 
+              onClick={() => masterCategoriesInputRef.current?.click()}
+              className="w-full py-2 bg-[#005999] text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-[#004a80] transition-all flex items-center justify-center gap-2"
+            >
+              <Plus size={12}/> {masterCategories.length > 0 ? 'Actualizar Cats' : 'Cargar Cats'}
+              <input type="file" ref={masterCategoriesInputRef} className="hidden" accept=".xlsx, .xls" onChange={handleMasterCategoriesUpload} />
+            </button>
           </div>
         </div>
 
@@ -349,21 +459,28 @@ export default function App() {
                <img src={GB_LOGO_URL} alt="Gallina Blanca" className="h-full w-auto object-contain" />
             </div>
             <h2 className="text-[10px] lg:text-sm font-black text-[#005999] uppercase tracking-widest flex items-center gap-2">
-              <ChefHat size={18} className="hidden sm:inline" /> <span className="hidden sm:inline">Recipe Bulk Engine</span>
+              {viewMode === 'recipes' ? <ChefHat size={18} className="hidden sm:inline" /> : <LayoutDashboard size={18} className="hidden sm:inline" />}
+              <span className="hidden sm:inline">{viewMode === 'recipes' ? 'Recipe Bulk Engine' : 'Category Bulk Engine'}</span>
               <span className="sm:hidden">Bulk Engine</span>
             </h2>
           </div>
-          {recipes.length > 0 && (
-            <div className="flex gap-1 lg:gap-2">
-              <ActionButton onClick={() => exportRecipesExcel(recipes)} disabled={totalCompleted === 0} icon={<BookOpen size={14}/>} label="Rec" />
-              <ActionButton onClick={() => exportStepsExcel(recipes)} disabled={totalCompleted === 0} icon={<FileSpreadsheet size={14}/>} label="Stp" />
-              <ActionButton onClick={() => exportFaqsExcel(recipes)} disabled={totalCompleted === 0} icon={<MessageSquareQuote size={14}/>} label="FAQ" />
-            </div>
-          )}
+          <div className="flex gap-1 lg:gap-2">
+            {viewMode === 'recipes' && recipes.length > 0 && (
+              <>
+                <ActionButton onClick={() => exportRecipesExcel(recipes)} disabled={totalCompleted === 0} icon={<BookOpen size={14}/>} label="Rec" />
+                <ActionButton onClick={() => exportStepsExcel(recipes)} disabled={totalCompleted === 0} icon={<FileSpreadsheet size={14}/>} label="Stp" />
+                <ActionButton onClick={() => exportFaqsExcel(recipes)} disabled={totalCompleted === 0} icon={<MessageSquareQuote size={14}/>} label="FAQ" />
+              </>
+            )}
+            {viewMode === 'categories' && categories.length > 0 && (
+              <ActionButton onClick={() => exportCategoriesExcel(categories)} disabled={totalCategoriesCompleted === 0} icon={<FileSpreadsheet size={14}/>} label="Exportar" />
+            )}
+          </div>
         </header>
 
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
-          {recipes.length === 0 ? (
+          {viewMode === 'recipes' ? (
+            recipes.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center py-10">
               <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
                 {/* Card 1: Excel a Generar */}
@@ -371,7 +488,7 @@ export default function App() {
                   <div className="bg-[#FFD200]/10 p-4 lg:p-6 rounded-full w-fit mb-6 lg:mb-8">
                     <FileSpreadsheet className="w-8 h-8 lg:w-12 lg:h-12 text-[#005999]" />
                   </div>
-                  <h2 className="text-2xl lg:text-3xl font-black text-[#005999] mb-2 lg:mb-4 italic">Excel Base</h2>
+                  <h2 className="text-2xl lg:text-3xl font-black text-[#005999] mb-2 lg:mb-4 italic">Excel Recetas</h2>
                   <p className="text-slate-500 mb-6 lg:mb-10 text-xs lg:text-sm leading-relaxed">Sube el archivo con las recetas que quieres crear contenido SEO hoy.</p>
                   
                   <label className="w-full cursor-pointer bg-[#005999] text-white px-6 py-3 lg:px-8 lg:py-4 rounded-xl lg:rounded-2xl font-black text-base lg:text-lg shadow-xl hover:bg-[#004a80] transition-all flex items-center justify-center gap-3">
@@ -392,19 +509,6 @@ export default function App() {
                     <Search className="inline" size={20} /> {masterRecipes.length > 0 ? 'Master Cargado ✓' : 'Subir Master Excel'}
                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleMasterUpload} />
                   </label>
-                  {masterRecipes.length > 0 && (
-                    <button onClick={() => setMasterRecipes([])} className="mt-2 text-[9px] font-bold text-red-500 uppercase hover:underline">Eliminar Master</button>
-                  )}
-                </div>
-
-                <div className="md:col-span-2 mt-4">
-                  <button 
-                    onClick={() => jsonInputRef.current?.click()}
-                    className="w-full px-6 py-4 bg-slate-100 text-slate-600 rounded-xl lg:rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2 text-sm lg:text-base"
-                  >
-                    <FolderOpen size={20} /> Restaurar Sesión completa (.JSON)
-                    <input type="file" ref={jsonInputRef} className="hidden" accept=".json" onChange={handleLoadSession} />
-                  </button>
                 </div>
               </div>
             </div>
@@ -427,7 +531,6 @@ export default function App() {
                       >
                         <Upload size={14}/> Cargar Master
                       </button>
-                      <button className="flex-1 sm:flex-none px-4 lg:px-6 py-2 bg-white text-blue-400 text-[10px] lg:text-xs font-black rounded-xl hover:bg-slate-50 transition-all">Omitir</button>
                     </div>
                  </div>
               )}
@@ -443,7 +546,7 @@ export default function App() {
                    <button onClick={() => { if(confirm("¿Seguro que quieres limpiar todo?")) setRecipes([]); }} className="p-4 bg-white border rounded-2xl text-slate-300 hover:text-red-500 transition-all shadow-sm flex-1 lg:flex-none flex justify-center items-center"><Trash2 /></button>
                    <button onClick={runBulkGeneration} disabled={step === GenerationStep.GENERATING} className="flex-1 px-8 lg:px-10 py-4 bg-[#005999] text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl disabled:opacity-50 hover:bg-[#004a80] transition-all active:scale-95">
                     {step === GenerationStep.GENERATING ? <Loader2 className="animate-spin" size={20} /> : <Play size={20} fill="currentColor" />} 
-                    <span className="whitespace-nowrap">Iniciar Bulk</span>
+                    <span className="whitespace-nowrap">Iniciar Bulk Recetas</span>
                   </button>
                 </div>
               </div>
@@ -486,6 +589,102 @@ export default function App() {
                 </div>
               </div>
             </div>
+          )
+          ) : (
+            // VISTA CATEGORÍAS
+            categories.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center py-10">
+                <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
+                  {/* Card 1: Excel Categorías */}
+                  <div className="bg-white border rounded-[2rem] lg:rounded-[3rem] p-6 lg:p-12 text-center shadow-xl lg:shadow-2xl relative flex flex-col items-center">
+                    <div className="bg-[#FFD200]/10 p-4 lg:p-6 rounded-full w-fit mb-6 lg:mb-8">
+                      <LayoutDashboard className="w-8 h-8 lg:w-12 lg:h-12 text-[#005999]" />
+                    </div>
+                    <h2 className="text-2xl lg:text-3xl font-black text-[#005999] mb-2 lg:mb-4 italic">Excel Categorías</h2>
+                    <p className="text-slate-500 mb-6 lg:mb-10 text-xs lg:text-sm leading-relaxed">Sube el archivo con los nombres de las categorías a generar.</p>
+                    
+                    <label className="w-full cursor-pointer bg-[#005999] text-white px-6 py-3 lg:px-8 lg:py-4 rounded-xl lg:rounded-2xl font-black text-base lg:text-lg shadow-xl hover:bg-[#004a80] transition-all flex items-center justify-center gap-3">
+                      <Upload className="inline" size={20} /> Cargar Categorías
+                      <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleCategoryUpload} />
+                    </label>
+                  </div>
+  
+                  {/* Card 2: Master Lists */}
+                  <div className="bg-white border rounded-[2rem] lg:rounded-[3rem] p-6 lg:p-12 text-center shadow-xl lg:shadow-2xl relative flex flex-col items-center border-dashed border-[#005999]/20">
+                    <div className={`p-4 lg:p-6 rounded-full w-fit mb-6 lg:mb-8 ${masterRecipes.length > 0 ? 'bg-green-50' : 'bg-[#005999]/5'}`}>
+                      <Link className={`w-8 h-8 lg:w-12 lg:h-12 ${masterRecipes.length > 0 ? 'text-green-500' : 'text-[#005999]'}`} />
+                    </div>
+                    <h2 className="text-2xl lg:text-3xl font-black text-[#005999] mb-2 lg:mb-4 italic">Interlinking</h2>
+                    <p className="text-slate-500 mb-6 lg:mb-10 text-xs lg:text-sm leading-relaxed">Necesario: Master de Recetas (para sugerir platos) y Master de Categorías (para sugerir otras secciones).</p>
+                    
+                    <div className="space-y-2 w-full">
+                      <label className={`w-full cursor-pointer px-6 py-3 rounded-xl font-black text-sm shadow-sm transition-all flex items-center justify-center gap-3 border-2 ${masterRecipes.length > 0 ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-[#005999]/30 text-[#005999] hover:bg-slate-50'}`}>
+                        <Search className="inline" size={16} /> {masterRecipes.length > 0 ? 'Recetas Cargadas ✓' : 'Subir Recetas'}
+                        <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleMasterUpload} />
+                      </label>
+                      <label className={`w-full cursor-pointer px-6 py-3 rounded-xl font-black text-sm shadow-sm transition-all flex items-center justify-center gap-3 border-2 ${masterCategories.length > 0 ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-[#005999]/30 text-[#005999] hover:bg-slate-50'}`}>
+                        <Search className="inline" size={16} /> {masterCategories.length > 0 ? 'Categorías Cargadas ✓' : 'Subir Categorías'}
+                        <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleMasterCategoriesUpload} />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-500">
+                <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+                  <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+                    <StatCard label="Categorías" value={categories.length} icon={<LayoutDashboard size={16}/>} />
+                    <StatCard label="M. Recetas" value={masterRecipes.length} icon={<Link size={16}/>} />
+                    <StatCard label="M. Cats" value={masterCategories.length} icon={<Link size={16}/>} />
+                    <StatCard label="OK" value={totalCategoriesCompleted} isHighlight icon={<CheckCircle size={16}/>} />
+                  </div>
+                  <div className="flex gap-2 w-full lg:w-auto">
+                     <button onClick={() => { if(confirm("¿Seguro que quieres limpiar todo?")) setCategories([]); }} className="p-4 bg-white border rounded-2xl text-slate-300 hover:text-red-500 transition-all shadow-sm flex-1 lg:flex-none flex justify-center items-center"><Trash2 /></button>
+                     <button onClick={runBulkCategoryGeneration} disabled={step === GenerationStep.GENERATING} className="flex-1 px-8 lg:px-10 py-4 bg-[#005999] text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl disabled:opacity-50 hover:bg-[#004a80] transition-all active:scale-95">
+                      {step === GenerationStep.GENERATING ? <Loader2 className="animate-spin" size={20} /> : <Play size={20} fill="currentColor" />} 
+                      <span className="whitespace-nowrap">Iniciar Bulk Categorías</span>
+                    </button>
+                  </div>
+                </div>
+  
+                <div className="bg-white rounded-2xl lg:rounded-3xl border overflow-hidden shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left min-w-[600px]">
+                      <thead className="bg-slate-50 border-b">
+                        <tr>
+                          <th className="px-6 lg:px-8 py-4 text-[10px] font-black text-slate-400 uppercase">Categoría</th>
+                          <th className="px-6 lg:px-8 py-4 text-[10px] font-black text-slate-400 uppercase text-center">Interlinking</th>
+                          <th className="px-6 lg:px-8 py-4 text-[10px] font-black text-slate-400 uppercase text-center">Estado</th>
+                          <th className="px-6 lg:px-8 py-4 text-[10px] font-black text-slate-400 uppercase text-right">Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {categories.map((c, i) => (
+                          <tr key={i} className="hover:bg-[#FFD200]/5 transition-colors">
+                            <td className="px-6 lg:px-8 py-4 font-bold text-sm lg:text-base">{c.input.categoryName}</td>
+                            <td className="px-6 lg:px-8 py-4 text-center">
+                              {masterRecipes.length > 0 && masterCategories.length > 0 ? (
+                                <span className="text-green-500 flex justify-center" title="Interlinking OK"><CheckCircle size={14}/></span>
+                              ) : (
+                                <span className="text-orange-300 flex justify-center" title="Falta algún Master">-</span>
+                              )}
+                            </td>
+                            <td className="px-6 lg:px-8 py-4 text-center">
+                              <span className={`px-2 lg:px-3 py-1 rounded-lg text-[8px] lg:text-[9px] font-black uppercase tracking-widest ${c.status === 'completed' ? 'bg-[#005999] text-white' : c.status === 'error' ? 'bg-red-500 text-white' : c.status === 'processing' ? 'bg-[#FFD200] text-[#005999] animate-pulse' : 'bg-slate-100 text-slate-400'}`}>{c.status}</span>
+                            </td>
+                            <td className="px-6 lg:px-8 py-4 text-right">
+                              {c.status === 'completed' && <button onClick={() => setPreviewCategory(c)} className="text-[#005999] p-2 hover:bg-[#FFD200]/20 rounded-lg"><Eye size={18}/></button>}
+                              {c.status === 'error' && <span title={c.error} className="text-red-500"><AlertCircle size={18} /></span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )
           )}
         </main>
       </div>
@@ -529,8 +728,12 @@ export default function App() {
                   <textarea value={systemPrompt} onChange={(e) => updateSetting('gb_system_prompt', e.target.value)} className="w-full h-32 lg:h-48 bg-slate-900 rounded-xl lg:rounded-3xl p-4 lg:p-8 text-xs lg:text-sm text-emerald-400 font-mono focus:ring-4 focus:ring-[#FFD200]/10 outline-none shadow-xl" />
                 </div>
                 <div className="space-y-2 lg:space-y-4">
-                  <label className="text-[10px] lg:text-[11px] font-black uppercase text-[#005999]">2. User Prompt Template</label>
-                  <textarea value={userPrompt} onChange={(e) => updateSetting('gb_user_prompt_template', e.target.value)} className="w-full h-[300px] lg:h-[600px] bg-slate-900 rounded-xl lg:rounded-[2.5rem] p-4 lg:p-8 text-xs lg:text-sm text-blue-300 font-mono focus:ring-4 focus:ring-[#005999]/10 outline-none shadow-xl" />
+                  <label className="text-[10px] lg:text-[11px] font-black uppercase text-[#005999]">2. User Prompt Template (Recetas)</label>
+                  <textarea value={userPrompt} onChange={(e) => updateSetting('gb_user_prompt_template', e.target.value)} className="w-full h-[300px] lg:h-[400px] bg-slate-900 rounded-xl lg:rounded-[2.5rem] p-4 lg:p-8 text-xs lg:text-sm text-blue-300 font-mono focus:ring-4 focus:ring-[#005999]/10 outline-none shadow-xl" />
+                </div>
+                <div className="space-y-2 lg:space-y-4">
+                  <label className="text-[10px] lg:text-[11px] font-black uppercase text-[#005999]">3. User Prompt Template (Categorías)</label>
+                  <textarea value={categoryPrompt} onChange={(e) => updateSetting('gb_category_prompt_template', e.target.value)} className="w-full h-[300px] lg:h-[400px] bg-slate-900 rounded-xl lg:rounded-[2.5rem] p-4 lg:p-8 text-xs lg:text-sm text-purple-300 font-mono focus:ring-4 focus:ring-[#005999]/10 outline-none shadow-xl" />
                 </div>
               </div>
             </div>
@@ -540,6 +743,27 @@ export default function App() {
               <button onClick={() => setShowPromptsModal(false)} className="w-full sm:w-auto px-10 py-4 lg:px-14 lg:py-5 bg-[#005999] text-white rounded-xl lg:rounded-[2rem] font-black shadow-2xl hover:bg-[#004a80] transition-all active:scale-95 flex items-center justify-center gap-2">
                 <Save size={18} /> GUARDAR CONFIGURACIÓN
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal for Categories */}
+      {previewCategory && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-6 bg-[#005999]/30 backdrop-blur-sm overflow-hidden">
+          <div className="bg-white w-full h-full sm:max-w-6xl sm:max-h-full sm:rounded-[2rem] lg:rounded-[3rem] shadow-2xl flex flex-col overflow-hidden border-t-[8px] lg:border-t-[12px] border-[#FFD200]">
+            <div className="px-6 lg:px-10 py-6 lg:py-8 border-b flex items-center justify-between sticky top-0 z-10 bg-white">
+              <div className="flex items-center gap-4 lg:gap-6">
+                <img src={GB_LOGO_URL} alt="GB" className="h-8 lg:h-10" />
+                <div>
+                  <h3 className="font-black text-[#005999] text-lg lg:text-2xl italic line-clamp-1">{previewCategory.input.categoryName}</h3>
+                  <p className="text-[9px] lg:text-xs text-slate-400 font-black uppercase tracking-tighter">CATEGORÍA</p>
+                </div>
+              </div>
+              <button onClick={() => setPreviewCategory(null)} className="p-2 text-[#005999] hover:bg-slate-50 rounded-full transition-colors"><X size={24} /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 lg:p-12 space-y-8 lg:space-y-12 bg-slate-50/20">
+              <Section label="Contenido Generado" content={previewCategory.content} />
             </div>
           </div>
         </div>

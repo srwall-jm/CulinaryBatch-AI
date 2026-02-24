@@ -38,6 +38,24 @@ export interface GeneratedRecipe {
   error?: string;
 }
 
+// --- CATEGORY TYPES ---
+
+export interface CategoryInput {
+  categoryName: string;
+}
+
+export interface MasterCategory {
+  name: string;
+  url: string;
+}
+
+export interface GeneratedCategory {
+  input: CategoryInput;
+  content: string; // Full HTML content
+  status: 'pending' | 'processing' | 'completed' | 'error';
+  error?: string;
+}
+
 export enum GenerationStep {
   IDLE = 'IDLE',
   PARSING = 'PARSING',
