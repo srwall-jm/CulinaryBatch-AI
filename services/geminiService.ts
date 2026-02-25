@@ -153,20 +153,20 @@ MANDAMIENTOS DE ORO (CHECKLIST OBLIGATORIO):
      - Contenedor Principal: <div style="display: flex; flex-direction: column; gap: 15px; margin: 20px 0 30px 0; font-family: 'Segoe UI', Arial, sans-serif;">
      
      - ESTRUCTURA DE CADA TARJETA (Repetir por cada tipo/corte):
-       <div style="display: flex; flex-wrap: wrap; border: 1px solid #d1d9e6; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+       <div style="display: flex; flex-wrap: wrap; border: 1px solid #d1d9e6; border-radius: 8px; overflow: hidden">
           <!-- Columna 1: Título (Azul) -->
-          <div style="flex: 1 1 150px; background-color: #0055A5; color: white; padding: 15px; display: flex; align-items: center; justify-content: center; font-weight: bold; text-align: center; font-size: 16px;">
+          <div style="flex: 1 1 150px; background-color: #0055A5; color: white; padding: 15px; display: flex; align-items: center; justify-content: center; font-weight: bold; text-align: center; font-size: 16px">
               [NOMBRE DEL CORTE/TIPO]
           </div>
           <!-- Columna 2: Características -->
-          <div style="flex: 2 1 200px; padding: 15px; background-color: [COLOR_FONDO]; border-right: 1px solid #f0f0f0; min-width: 200px;">
-              <strong style="display: block; font-size: 11px; color: #0055A5; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px;">Características</strong>
-              <span style="color: #444; font-size: 14px;">[DESCRIPCIÓN]</span>
+          <div style="flex: 2 1 200px; padding: 15px; background-color: [COLOR_FONDO]; border-right: 1px solid #f0f0f0; min-width: 200px">
+              <p style="margin: 0 0 4px 0; font-size: 11px; color: #0055A5; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px">Características</p>
+              <p style="margin: 0; color: #444; font-size: 14px; line-height: 1.4">[DESCRIPCIÓN]</p>
           </div>
           <!-- Columna 3: Uso -->
-          <div style="flex: 2 1 200px; padding: 15px; background-color: [COLOR_FONDO]; min-width: 200px;">
-              <strong style="display: block; font-size: 11px; color: #2e7d32; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 0.5px;">Mejor Uso Culinario</strong>
-              <span style="color: #444; font-size: 14px;">[USO]</span>
+          <div style="flex: 2 1 200px; padding: 15px; background-color: [COLOR_FONDO]; min-width: 200px">
+              <p style="margin: 0 0 4px 0; font-size: 11px; color: #2e7d32; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px">Mejor Uso Culinario</p>
+              <p style="margin: 0; color: #444; font-size: 14px; line-height: 1.4">[USO]</p>
           </div>
        </div>
      
