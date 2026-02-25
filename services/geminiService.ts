@@ -73,9 +73,11 @@ REQUERIMIENTOS SEO Y ESTRUCTURA EDITORIAL (CALIDAD MÁXIMA):
 1. INTRODUCCIÓN (3 párrafos):
    - Párrafo 1: Menciona "{{heroKW}}" y "{{gbIngredient}}" de forma casual. Tono humilde ("En Gallina Blanca...").
    - Párrafo 2: Breve contexto o curiosidad.
-   - Párrafo 3: Integra las keywords secundarias ("{{secondaryKws}}").
-   - CRÍTICO: ADAPTA LA GRAMÁTICA. Si la keyword es "pollo receta", escribe "receta de pollo". Añade preposiciones.
-   - SI APARECE "RECETA FÁCIL": Usa sinónimos como "sencilla", "simple", etc.
+   - Párrafo 3: Integra las keywords secundarias ("{{secondaryKws}}") con FLUIDEZ TOTAL y DINAMISMO.
+   - OBJETIVO: Que suene natural, NO forzado ni "indio".
+   - ESTRUCTURA SUGERIDA: Empieza hablando de la importancia de reunir los mejores ingredientes (usando la keyword de ingredientes corregida gramaticalmente) y conecta con que es una receta accesible.
+   - EJEMPLO DE TONO: "Para empezar, es fundamental reunir los mejores ingredientes para [el plato], priorizando la calidad. Esta es una de esas [receta fácil/sencilla] que respeta el espíritu original, permitiendo que cualquiera pueda disfrutar del sabor de toda la vida."
+   - CRÍTICO: Si la keyword es "lentejas ingredientes", ESCRIBE "ingredientes para las lentejas". Si es "lentejas receta fácil", ESCRIBE "receta fácil de lentejas". CORRIGE SIEMPRE LA GRAMÁTICA.
 
 2. PASO A PASO: 
    - Exactamente {{numPasos}} pasos detallados.
