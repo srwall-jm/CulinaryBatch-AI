@@ -73,14 +73,12 @@ REQUERIMIENTOS SEO Y ESTRUCTURA EDITORIAL (CALIDAD MÁXIMA):
 1. INTRODUCCIÓN (3 párrafos):
    - Párrafo 1: Menciona "{{heroKW}}" y "{{gbIngredient}}" de forma casual. Tono humilde ("En Gallina Blanca...").
    - Párrafo 2: Breve contexto o curiosidad.
-   - Párrafo 3: Redacta un párrafo sobre la importancia de los ingredientes y la sencillez del plato, inspirándote en estos términos: "{{secondaryKws}}".
-   - CRÍTICO: NO COPIES LITERALMENTE ESTOS TÉRMINOS. Úsalos solo como IDEA SEMÁNTICA.
-   - Si la lista incluye "paella ingredientes", TÚ DEBES ESCRIBIR "ingredientes de la paella".
-   - Si incluye "receta fácil", TÚ DEBES ESCRIBIR "receta sencilla" o "fácil de preparar".
-   - PROHIBIDO: "paella ingredientes", "receta fácil paella". (Esto es "hablar indio" y está penalizado).
-   - OBJETIVO: Naturalidad total. El lector no debe notar que había keywords.
-   - ESTRUCTURA: Empieza hablando de la importancia de la materia prima y conecta con la facilidad de preparación.
+   - Párrafo 3: Integra las keywords secundarias ("{{secondaryKws}}") PERO CORRIGIENDO SU GRAMÁTICA OBLIGATORIAMENTE.
+   - PROHIBIDO ABSOLUTAMENTE: Insertar keywords literalmente si suenan a "indio" o "tarzán" (ej: "seleccionar los paella ingredientes", "hacer una paella receta fácil"). ESTO ESTÁ PENALIZADO.
+   - OBLIGATORIO: Cambiar el orden y añadir preposiciones. (ej: "seleccionar los ingredientes de la paella", "hacer una receta fácil de paella").
+   - ESTRUCTURA: Empieza hablando de la importancia de la materia prima (ingredientes) y conecta con la facilidad de preparación.
    - TONO: "Para empezar, la clave está en reunir los mejores ingredientes para la [receta], priorizando la calidad... Esta es una [receta fácil/sencilla] que respeta..."
+   - REGLA DE ORO: Si la keyword es "X ingredientes", escribe "ingredientes para X". Si es "X receta", escribe "receta de X".
 
 2. PASO A PASO: 
    - Exactamente {{numPasos}} pasos detallados.
