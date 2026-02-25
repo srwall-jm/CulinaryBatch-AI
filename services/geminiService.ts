@@ -73,11 +73,12 @@ REQUERIMIENTOS SEO Y ESTRUCTURA EDITORIAL (CALIDAD MÁXIMA):
 1. INTRODUCCIÓN (3 párrafos):
    - Párrafo 1: Menciona "{{heroKW}}" y "{{gbIngredient}}" de forma casual. Tono humilde ("En Gallina Blanca...").
    - Párrafo 2: Breve contexto o curiosidad.
-   - Párrafo 3: Integra las keywords secundarias ("{{secondaryKws}}") con FLUIDEZ TOTAL y DINAMISMO.
-   - OBJETIVO: Que suene natural, NO forzado ni "indio".
-   - ESTRUCTURA SUGERIDA: Empieza hablando de la importancia de reunir los mejores ingredientes (usando la keyword de ingredientes corregida gramaticalmente) y conecta con que es una receta accesible.
-   - EJEMPLO DE TONO: "Para empezar, es fundamental reunir los mejores ingredientes para [el plato], priorizando la calidad. Esta es una de esas [receta fácil/sencilla] que respeta el espíritu original, permitiendo que cualquiera pueda disfrutar del sabor de toda la vida."
-   - CRÍTICO: Si la keyword es "lentejas ingredientes", ESCRIBE "ingredientes para las lentejas". Si es "lentejas receta fácil", ESCRIBE "receta fácil de lentejas". CORRIGE SIEMPRE LA GRAMÁTICA.
+   - Párrafo 3: Integra las keywords secundarias ("{{secondaryKws}}") PERO CORRIGIENDO SU GRAMÁTICA OBLIGATORIAMENTE.
+   - PROHIBIDO ABSOLUTAMENTE: Insertar keywords literalmente si suenan a "indio" o "tarzán" (ej: "seleccionar los paella ingredientes", "hacer una paella receta fácil"). ESTO ESTÁ PENALIZADO.
+   - OBLIGATORIO: Cambiar el orden y añadir preposiciones. (ej: "seleccionar los ingredientes de la paella", "hacer una receta fácil de paella").
+   - ESTRUCTURA: Empieza hablando de la importancia de la materia prima (ingredientes) y conecta con la facilidad de preparación.
+   - TONO: "Para empezar, la clave está en reunir los mejores ingredientes para la [receta], priorizando la calidad... Esta es una [receta fácil/sencilla] que respeta..."
+   - REGLA DE ORO: Si la keyword es "X ingredientes", escribe "ingredientes para X". Si es "X receta", escribe "receta de X".
 
 2. PASO A PASO: 
    - Exactamente {{numPasos}} pasos detallados.
