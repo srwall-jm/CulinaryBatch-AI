@@ -35,6 +35,7 @@ import { generateRecipeContent, generateCategoryContent, DEFAULT_SYSTEM_PROMPT, 
 
 const AVAILABLE_MODELS = [
   { id: 'gemini-3-flash-preview', provider: 'gemini', name: 'Gemini 3.0 Flash' },
+  { id: 'gemini-3.1-flash-lite-preview', provider: 'gemini', name: 'Gemini 3.1 Flash Lite' },
   { id: 'gemini-3-pro-preview', provider: 'gemini', name: 'Gemini 3.0 Pro' },
   { id: 'gpt-4o-mini', provider: 'openai', name: 'GPT-4o Mini' },
   { id: 'gpt-4o', provider: 'openai', name: 'GPT-4o' },
