@@ -34,6 +34,7 @@ import { parseExcelFile, parseMasterExcel, exportRecipesExcel, exportStepsExcel,
 import { generateRecipeContent, generateCategoryContent, DEFAULT_SYSTEM_PROMPT, DEFAULT_USER_PROMPT_TEMPLATE, DEFAULT_CATEGORY_USER_PROMPT_TEMPLATE } from './services/geminiService';
 
 const AVAILABLE_MODELS = [
+  { id: 'gemini-3.7-flash', provider: 'gemini', name: 'Gemini 3.7 Flash' },
   { id: 'gemini-3-flash-preview', provider: 'gemini', name: 'Gemini 3.0 Flash' },
   { id: 'gemini-3.1-flash-lite-preview', provider: 'gemini', name: 'Gemini 3.1 Flash Lite' },
   { id: 'gemini-3-pro-preview', provider: 'gemini', name: 'Gemini 3.0 Pro' },
