@@ -39,6 +39,7 @@ const AVAILABLE_MODELS = [
   { id: 'gemini-3-pro-preview', provider: 'gemini', name: 'Gemini 3.0 Pro' },
   { id: 'gpt-4o-mini', provider: 'openai', name: 'GPT-4o Mini' },
   { id: 'gpt-4o', provider: 'openai', name: 'GPT-4o' },
+  { id: 'claude-3-6-sonnet-latest', provider: 'anthropic', name: 'Claude 3.6 Sonnet' },
   { id: 'claude-3-5-sonnet-latest', provider: 'anthropic', name: 'Claude 3.5 Sonnet' },
 ];
 
